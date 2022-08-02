@@ -160,7 +160,7 @@ class OTXReceiver():
         # mtime = (datetime.now() - timedelta(days=days_to_load)).isoformat()
         print("Starting OTX feed download ...")
         self.events = self.otx.getall()
-        print("Download complete - %s events received" % len(self.events))
+        print(f"Download complete - {len(self.events)} events received")
         # json_normalize(self.events)
 
     def write_iocs(self, ioc_folder):

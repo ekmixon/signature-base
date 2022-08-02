@@ -74,7 +74,7 @@ class BlueLivReceiver():
             print(response.items)  # malwares
             print(response.next_update)
         except Exception as e:
-            logger.error('{}'.format(e))
+            logger.error(f'{e}')
         else:
             print('Success!')
 
@@ -92,17 +92,18 @@ class BlueLivReceiver():
         # Hash
         if ioc_type in ('md5', 'sha1', 'sha256'):
             # No empty files
-            if value == 'd41d8cd98f00b204e9800998ecf8427e' or \
-                            value == 'da39a3ee5e6b4b0d3255bfef95601890afd80709' or \
-                            value == 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855':
+            if value in [
+                'd41d8cd98f00b204e9800998ecf8427e',
+                'da39a3ee5e6b4b0d3255bfef95601890afd80709',
+                'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            ]:
                 return
             self.hash_iocs[value] = comment
         # Filenames
         if ioc_type in ('filename', 'filepath'):
             # Add prefix to filenames
-            if not re.search(r'^([a-zA-Z]:|%)', value):
-                if not self.siem_mode:
-                    value = "\\\\{0}".format(value)
+            if not re.search(r'^([a-zA-Z]:|%)', value) and not self.siem_mode:
+                value = "\\\\{0}".format(value)
             if self.use_filename_regex:
                 self.filename_iocs[my_escape(value)] = comment
             else:
@@ -155,10 +156,7 @@ if __name__ == '__main__':
         print("Set an API key in script or via -k APIKEY.")
         sys.exit(0)
 
-    host = "freeapi.blueliv.com"
-    if args.nonfree:
-        host = "api.blueliv.com"
-
+    host = "api.blueliv.com" if args.nonfree else "freeapi.blueliv.com"
     # Create a receiver
     blueliv_receiver = BlueLivReceiver(api_key=args.k, host=host, siem_mode=args.siem, debugon=args.debug)
 

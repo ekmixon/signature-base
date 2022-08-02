@@ -90,10 +90,7 @@ class MISPReceiver():
         # C2s
         if ioc_type in ('hostname', 'ip-dst', 'domain'):
             # (at least on Win10) scanning for network endpoints is only succesful if /32 is added
-            if ioc_type == "ip-dst":
-                c2_cidr=args.c2cidr
-            else:
-                c2_cidr = ""
+            c2_cidr = args.c2cidr if ioc_type == "ip-dst" else ""
             value = "{0}{1}".format(value.decode("utf-8"),c2_cidr)
             self.c2_iocs[value] = comment
         # Hash
@@ -104,9 +101,8 @@ class MISPReceiver():
         if ioc_type in ('filename', 'filepath'):
             value = value.decode("utf-8")
             # Add prefix to filenames
-            if not re.search(r'^([a-zA-Z]:|%)', value):
-                if not self.siem_mode:
-                    value = "\\\\{0}".format(value)
+            if not re.search(r'^([a-zA-Z]:|%)', value) and not self.siem_mode:
+                value = "\\\\{0}".format(value)
             if self.use_filename_regex:
                 self.filename_iocs[my_escape(value)] = comment
             else:
@@ -118,7 +114,9 @@ class MISPReceiver():
     def add_yara_rule(self, yara_rule, uuid, info):
         identifier = generate_identifier(info, uuid)
         print(identifier)
-        self.yara_rules[identifier] = r'%s' % repair_yara_rule(yara_rule.decode('unicode_escape'), uuid)
+        self.yara_rules[
+            identifier
+        ] = f"{repair_yara_rule(yara_rule.decode('unicode_escape'), uuid)}"
 
     def write_iocs(self, output_path, output_path_yara):
         # Write C2 IOCs
@@ -134,7 +132,7 @@ class MISPReceiver():
                 os.makedirs(output_path_yara)
             # Loop through rules (keys are identifiers used for file names)
             for yara_rule in self.yara_rules:
-                output_rule_filename = os.path.join(output_path_yara, "%s.yar" % yara_rule)
+                output_rule_filename = os.path.join(output_path_yara, f"{yara_rule}.yar")
                 self.write_yara_rule(output_rule_filename, self.yara_rules[yara_rule])
             print("{0} YARA rules written to directory {1}".format(len(self.yara_rules), output_path_yara))
 
@@ -157,7 +155,7 @@ class MISPReceiver():
     def write_yara_rule(self, yara_file, yara_rule):
         # Write the YARA rule
         with io.open(yara_file, 'w') as fh:
-            fh.write(r'%s' % yara_rule)
+            fh.write(f'{yara_rule}')
 
 
 def generate_identifier(string, uuid):
